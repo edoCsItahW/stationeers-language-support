@@ -3,75 +3,75 @@ import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
 plugins {
-    id("java") // Java support
-    alias(libs.plugins.kotlin) // Kotlin support
-    alias(libs.plugins.intelliJPlatform) // IntelliJ Platform Gradle Plugin
-    alias(libs.plugins.changelog) // Gradle Changelog Plugin
-    alias(libs.plugins.qodana) // Gradle Qodana Plugin
-    alias(libs.plugins.kover) // Gradle Kover Plugin
+    id("java") // Java支持
+    alias(libs.plugins.kotlin) // Kotlin支持
+    alias(libs.plugins.intelliJPlatform) // IntelliJ平台Gradle插件
+    alias(libs.plugins.changelog) // Gradle更新日志插件
+    alias(libs.plugins.qodana) // Gradle Qodana插件
+    alias(libs.plugins.kover) // Gradle Kover插件
 }
 
 group = providers.gradleProperty("pluginGroup").get()
 version = providers.gradleProperty("pluginVersion").get()
 
-// Set the JVM language level used to build the project.
+// 设置构建项目使用的JVM语言级别
 kotlin {
     jvmToolchain(21)
 }
 
-// Configure project's dependencies
+// 配置项目依赖项
 repositories {
     mavenCentral()
 
-    // IntelliJ Platform Gradle Plugin Repositories Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-repositories-extension.html
+    // IntelliJ平台Gradle插件仓库扩展 - 更多信息：https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-repositories-extension.html
     intellijPlatform {
         defaultRepositories()
     }
 }
 
-// Dependencies are managed with Gradle version catalog - read more: https://docs.gradle.org/current/userguide/version_catalogs.html
+// 依赖项使用Gradle版本目录管理 - 更多信息：https://docs.gradle.org/current/userguide/version_catalogs.html
 dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.opentest4j)
 
-    // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
+    // IntelliJ平台Gradle插件依赖项扩展 - 更多信息：https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
     intellijPlatform {
         intellijIdea(providers.gradleProperty("platformVersion"))
 
-        // Plugin Dependencies. Uses `platformBundledPlugins` property from the gradle.properties file for bundled IntelliJ Platform plugins.
+        // 插件依赖项。使用gradle.properties文件中的`platformBundledPlugins`属性来指定捆绑的IntelliJ平台插件。
         bundledPlugins(providers.gradleProperty("platformBundledPlugins").map { it.split(',') })
 
-        // Plugin Dependencies. Uses `platformPlugins` property from the gradle.properties file for plugin from JetBrains Marketplace.
+        // 插件依赖项。使用gradle.properties文件中的`platformPlugins`属性来指定来自JetBrains Marketplace的插件。
         plugins(providers.gradleProperty("platformPlugins").map { it.split(',') })
 
-        // Module Dependencies. Uses `platformBundledModules` property from the gradle.properties file for bundled IntelliJ Platform modules.
+        // 模块依赖项。使用gradle.properties文件中的`platformBundledModules`属性来指定捆绑的IntelliJ平台模块。
         bundledModules(providers.gradleProperty("platformBundledModules").map { it.split(',') })
 
         testFramework(TestFrameworkType.Platform)
     }
 }
 
-// Configure IntelliJ Platform Gradle Plugin - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-extension.html
+// 配置IntelliJ平台Gradle插件 - 更多信息：https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-extension.html
 intellijPlatform {
     pluginConfiguration {
         name = providers.gradleProperty("pluginName")
         version = providers.gradleProperty("pluginVersion")
 
-        // Extract the <!-- Plugin description --> section from README.md and provide for the plugin's manifest
+        // 从README.md中提取<!-- Plugin description -->部分并提供给插件清单
         description = providers.fileContents(layout.projectDirectory.file("README.md")).asText.map {
             val start = "<!-- Plugin description -->"
             val end = "<!-- Plugin description end -->"
 
             with(it.lines()) {
                 if (!containsAll(listOf(start, end))) {
-                    throw GradleException("Plugin description section not found in README.md:\n$start ... $end")
+                    throw GradleException("在README.md中未找到插件描述部分：\n$start ... $end")
                 }
                 subList(indexOf(start) + 1, indexOf(end)).joinToString("\n").let(::markdownToHTML)
             }
         }
 
-        val changelog = project.changelog // local variable for configuration cache compatibility
-        // Get the latest available change notes from the changelog file
+        val changelog = project.changelog // 用于配置缓存兼容性的局部变量
+        // 从更新日志文件中获取最新的可用变更说明
         changeNotes = providers.gradleProperty("pluginVersion").map { pluginVersion ->
             with(changelog) {
                 renderItem(
@@ -96,8 +96,8 @@ intellijPlatform {
 
     publishing {
         token = providers.environmentVariable("PUBLISH_TOKEN")
-        // The pluginVersion is based on the SemVer (https://semver.org) and supports pre-release labels, like 2.1.7-alpha.3
-        // Specify pre-release label to publish the plugin in a custom Release Channel automatically. Read more:
+        // pluginVersion基于SemVer（https://semver.org）并支持预发布标签，如2.1.7-alpha.3
+        // 指定预发布标签以自动在自定义发布渠道中发布插件。更多信息：
         // https://plugins.jetbrains.com/docs/intellij/publishing-plugin.html#specifying-a-release-channel
         channels = providers.gradleProperty("pluginVersion").map { listOf(it.substringAfter('-', "").substringBefore('.').ifEmpty { "default" }) }
     }
@@ -109,13 +109,13 @@ intellijPlatform {
     }
 }
 
-// Configure Gradle Changelog Plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
+// 配置Gradle更新日志插件 - 更多信息：https://github.com/JetBrains/gradle-changelog-plugin
 changelog {
     groups.empty()
     repositoryUrl = providers.gradleProperty("pluginRepositoryUrl")
 }
 
-// Configure Gradle Kover Plugin - read more: https://kotlin.github.io/kotlinx-kover/gradle-plugin/#configuration-details
+// 配置Gradle Kover插件 - 更多信息：https://kotlin.github.io/kotlinx-kover/gradle-plugin/#configuration-details
 kover {
     reports {
         total {

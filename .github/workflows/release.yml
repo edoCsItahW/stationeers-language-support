@@ -1,100 +1,100 @@
-# GitHub Actions Workflow created for handling the release process based on the draft release prepared with the Build workflow.
-# Running the publishPlugin task requires all the following secrets to be provided: PUBLISH_TOKEN, PRIVATE_KEY, PRIVATE_KEY_PASSWORD, CERTIFICATE_CHAIN.
-# See https://plugins.jetbrains.com/docs/intellij/plugin-signing.html for more information.
+# GitHub Actions 工作流，用于处理基于构建工作流准备的草稿版本的发布流程。
+# 运行 publishPlugin 任务需要提供以下所有密钥：PUBLISH_TOKEN、PRIVATE_KEY、PRIVATE_KEY_PASSWORD、CERTIFICATE_CHAIN。
+# 更多信息请参阅 https://plugins.jetbrains.com/docs/intellij/plugin-signing.html。
 
-name: Release
+name: 发布
 on:
-  release:
-    types: [prereleased, released]
+    release:
+        types: [ prereleased, released ]
 
 jobs:
 
-  # Prepare and publish the plugin to JetBrains Marketplace repository
-  release:
-    name: Publish Plugin
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-    steps:
+    # 准备并将插件发布到 JetBrains Marketplace 仓库
+    release:
+        name: 发布插件
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+            pull-requests: write
+        steps:
 
-      # Free GitHub Actions Environment Disk Space
-      - name: Maximize Build Space
-        uses: jlumbroso/free-disk-space@v1.3.1
-        with:
-          tool-cache: false
-          large-packages: false
+            # 释放 GitHub Actions 环境的磁盘空间
+            -   name: 最大化构建空间
+                uses: jlumbroso/free-disk-space@v1.3.1
+                with:
+                    tool-cache: false
+                    large-packages: false
 
-      # Check out the current repository
-      - name: Fetch Sources
-        uses: actions/checkout@v5
-        with:
-          ref: ${{ github.event.release.tag_name }}
+            # 检出当前仓库
+            -   name: 获取源代码
+                uses: actions/checkout@v5
+                with:
+                    ref: ${{ github.event.release.tag_name }}
 
-      # Set up the Java environment for the next steps
-      - name: Setup Java
-        uses: actions/setup-java@v5
-        with:
-          distribution: zulu
-          java-version: 21
+            # 为后续步骤设置 Java 环境
+            -   name: 设置 Java
+                uses: actions/setup-java@v5
+                with:
+                    distribution: zulu
+                    java-version: 21
 
-      # Setup Gradle
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
-        with:
-          cache-read-only: true
+            # 设置 Gradle
+            -   name: 设置 Gradle
+                uses: gradle/actions/setup-gradle@v5
+                with:
+                    cache-read-only: true
 
-      # Update the Unreleased section with the current release note
-      - name: Patch Changelog
-        if: ${{ github.event.release.body != '' }}
-        env:
-          CHANGELOG: ${{ github.event.release.body }}
-        run: |
-          RELEASE_NOTE="./build/tmp/release_note.txt"
-          mkdir -p "$(dirname "$RELEASE_NOTE")"
-          echo "$CHANGELOG" > $RELEASE_NOTE
+            # 用当前发布说明更新“未发布”部分
+            -   name: 更新更新日志
+                if: ${{ github.event.release.body != '' }}
+                env:
+                    CHANGELOG: ${{ github.event.release.body }}
+                run: |
+                    RELEASE_NOTE="./build/tmp/release_note.txt"
+                    mkdir -p "$(dirname "$RELEASE_NOTE")"
+                    echo "$CHANGELOG" > $RELEASE_NOTE
+                    
+                    ./gradlew patchChangelog --release-note-file=$RELEASE_NOTE
 
-          ./gradlew patchChangelog --release-note-file=$RELEASE_NOTE
+            # 将插件发布到 JetBrains Marketplace
+            -   name: 发布插件
+                env:
+                    PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
+                    CERTIFICATE_CHAIN: ${{ secrets.CERTIFICATE_CHAIN }}
+                    PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+                    PRIVATE_KEY_PASSWORD: ${{ secrets.PRIVATE_KEY_PASSWORD }}
+                run: ./gradlew publishPlugin
 
-      # Publish the plugin to JetBrains Marketplace
-      - name: Publish Plugin
-        env:
-          PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
-          CERTIFICATE_CHAIN: ${{ secrets.CERTIFICATE_CHAIN }}
-          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
-          PRIVATE_KEY_PASSWORD: ${{ secrets.PRIVATE_KEY_PASSWORD }}
-        run: ./gradlew publishPlugin
+            # 将构件作为发行版资源上传
+            -   name: 上传发行版资源
+                env:
+                    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                run: gh release upload ${{ github.event.release.tag_name }} ./build/distributions/*
 
-      # Upload an artifact as a release asset
-      - name: Upload Release Asset
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload ${{ github.event.release.tag_name }} ./build/distributions/*
-
-      # Create a pull request
-      - name: Create Pull Request
-        if: ${{ github.event.release.body != '' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          VERSION="${{ github.event.release.tag_name }}"
-          BRANCH="changelog-update-$VERSION"
-          LABEL="release changelog"
-
-          git config user.email "action@github.com"
-          git config user.name "GitHub Action"
-
-          git checkout -b $BRANCH
-          git commit -am "Changelog update - $VERSION"
-          git push --set-upstream origin $BRANCH
-
-          gh label create "$LABEL" \
-            --description "Pull requests with release changelog update" \
-            --force \
-            || true
-
-          gh pr create \
-            --title "Changelog update - \`$VERSION\`" \
-            --body "Current pull request contains patched \`CHANGELOG.md\` file for the \`$VERSION\` version." \
-            --label "$LABEL" \
-            --head $BRANCH
+            # 创建拉取请求
+            -   name: 创建拉取请求
+                if: ${{ github.event.release.body != '' }}
+                env:
+                    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                run: |
+                    VERSION="${{ github.event.release.tag_name }}"
+                    BRANCH="changelog-update-$VERSION"
+                    LABEL="release changelog"
+                    
+                    git config user.email "action@github.com"
+                    git config user.name "GitHub Action"
+                    
+                    git checkout -b $BRANCH
+                    git commit -am "更新日志更新 - $VERSION"
+                    git push --set-upstream origin $BRANCH
+                    
+                    gh label create "$LABEL" \
+                      --description "包含发布更新日志更新的拉取请求" \
+                      --force \
+                      || true
+                    
+                    gh pr create \
+                      --title "更新日志更新 - \`$VERSION\`" \
+                      --body "当前拉取请求包含 \`$VERSION\` 版本的修补后的 \`CHANGELOG.md\` 文件。" \
+                      --label "$LABEL" \
+                      --head $BRANCH
