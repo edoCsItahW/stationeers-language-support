@@ -10,13 +10,13 @@
 > [!注意]
 > 点击 <kbd>使用此模板</kbd> 按钮，然后在 IntelliJ IDEA 中克隆它。
 
-<!-- 插件描述 -->
+<!-- Plugin description -->
 **IntelliJ 平台插件模板** 是一个仓库，提供了一个纯粹的模板，以便更轻松地创建新的插件项目（查看 [从模板创建仓库][gh:template] 文章）。
 
 此模板的主要目标是通过预配置项目脚手架和持续集成、链接到适当的文档页面以及保持一切井然有序，来加快新老开发人员的插件开发设置阶段。
 
 [gh:template]: https://docs.github.com/zh/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template
-<!-- 插件描述结束 -->
+<!-- Plugin description end -->
 
 如果你仍然不太确定这是什么，请阅读我们的介绍：[什么是 IntelliJ 平台？][docs:intro]
 
