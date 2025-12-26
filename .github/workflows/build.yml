@@ -71,7 +71,7 @@ jobs:
 
             # 将已构建的插件作为构件存储以供下载
             -   name: 上传构件
-                uses: actions/upload-artifact@v5
+                uses: actions/upload-artifact@v6
                 with:
                     name: ${{ steps.artifact.outputs.filename }}
                     path: ./build/distributions/content/*/*
@@ -114,7 +114,7 @@ jobs:
             # 收集失败测试的测试结果
             -   name: 收集测试结果
                 if: ${{ failure() }}
-                uses: actions/upload-artifact@v5
+                uses: actions/upload-artifact@v6
                 with:
                     name: tests-result
                     path: ${{ github.workspace }}/build/reports/tests
@@ -202,7 +202,7 @@ jobs:
             # 收集插件验证器结果
             -   name: 收集插件验证器结果
                 if: ${{ always() }}
-                uses: actions/upload-artifact@v5
+                uses: actions/upload-artifact@v6
                 with:
                     name: pluginVerifier-result
                     path: ${{ github.workspace }}/build/reports/pluginVerifier
