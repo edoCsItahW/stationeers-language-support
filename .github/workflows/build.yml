@@ -41,7 +41,7 @@ jobs:
 
             # 检出当前仓库
             -   name: 获取源代码
-                uses: actions/checkout@v5
+                uses: actions/checkout@v6
 
             # 为后续步骤设置 Java 环境
             -   name: 设置 Java
@@ -92,7 +92,7 @@ jobs:
 
             # 检出当前仓库
             -   name: 获取源代码
-                uses: actions/checkout@v5
+                uses: actions/checkout@v6
 
             # 为后续步骤设置 Java 环境
             -   name: 设置 Java
@@ -146,7 +146,7 @@ jobs:
 
             # 检出当前仓库
             -   name: 获取源代码
-                uses: actions/checkout@v5
+                uses: actions/checkout@v6
                 with:
                     ref: ${{ github.event.pull_request.head.sha }} # 检出实际的拉取请求提交，而非合并提交
                     fetch-depth: 0 # 拉取请求分析需要完整的历史记录
@@ -180,7 +180,7 @@ jobs:
 
             # 检出当前仓库
             -   name: 获取源代码
-                uses: actions/checkout@v5
+                uses: actions/checkout@v6
 
             # 为后续步骤设置 Java 环境
             -   name: 设置 Java
@@ -220,7 +220,7 @@ jobs:
 
             # 检出当前仓库
             -   name: 获取源代码
-                uses: actions/checkout@v5
+                uses: actions/checkout@v6
 
             # 通过 curl 请求获取带有 draft 标志的可用版本，删除旧的草稿版本
             -   name: 删除旧的草稿版本

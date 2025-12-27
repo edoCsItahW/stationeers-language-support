@@ -33,7 +33,7 @@ jobs:
 
             # 检出当前仓库
             -   name: 获取源代码
-                uses: actions/checkout@v5
+                uses: actions/checkout@v6
 
             # 为后续步骤设置 Java 环境
             -   name: 设置 Java
