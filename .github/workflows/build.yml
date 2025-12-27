@@ -160,7 +160,7 @@ jobs:
 
             # 运行 Qodana 代码检查
             -   name: Qodana - 代码检查
-                uses: JetBrains/qodana-action@v2025.1.1
+                uses: JetBrains/qodana-action@v2025.3.1
                 with:
                     cache-default-branch-only: true
 
